@@ -100,7 +100,9 @@ const loadUpstreamGatewaySettings = (env = process.env) => {
   const gateway = parsed && typeof parsed === "object" ? parsed.gateway : null;
   const url = typeof gateway?.url === "string" ? gateway.url.trim() : "";
   const token = typeof gateway?.token === "string" ? gateway.token.trim() : "";
-  if (!token && (!url || isLocalGatewayUrl(url))) {
+  const shouldUseDefaults = (!token || token === "_" || token === "__OPENCLAW_REDACTED__") &&
+    (!url || isLocalGatewayUrl(url));
+  if (shouldUseDefaults) {
     const defaults = readOpenclawGatewayDefaults(env);
     if (defaults) {
       return {

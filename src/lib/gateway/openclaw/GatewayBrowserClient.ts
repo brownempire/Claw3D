@@ -460,6 +460,12 @@ export class GatewayBrowserClient {
 
   private async sendConnect() {
     if (this.connectSent) return;
+    const nonce = this.connectNonce?.trim() ?? "";
+    if (!nonce) {
+      console.warn("[gateway] connect challenge missing nonce");
+      this.ws?.close(CONNECT_FAILED_CLOSE_CODE, "connect challenge missing nonce");
+      return;
+    }
     this.connectSent = true;
     if (this.connectTimer !== null) {
       window.clearTimeout(this.connectTimer);
@@ -500,13 +506,12 @@ export class GatewayBrowserClient {
           publicKey: string;
           signature: string;
           signedAt: number;
-          nonce: string | undefined;
+          nonce: string;
         }
       | undefined;
 
-    if (isSecureContext && deviceIdentity) {
+    if (isSecureContext && deviceIdentity && nonce) {
       const signedAtMs = Date.now();
-      const nonce = this.connectNonce ?? undefined;
       const payload = buildDeviceAuthPayload({
         deviceId: deviceIdentity.deviceId,
         clientId: this.opts.clientName ?? GATEWAY_CLIENT_NAMES.CONTROL_UI,
@@ -560,6 +565,16 @@ export class GatewayBrowserClient {
         this.opts.onHello?.(hello);
       })
       .catch((err) => {
+        const challengeRetryInFlight =
+          this.connectNonce !== null &&
+          err instanceof GatewayResponseError &&
+          err.code === "INVALID_REQUEST" &&
+          String(err.message ?? "").toLowerCase().includes("device identity");
+
+        if (challengeRetryInFlight) {
+          return;
+        }
+
         if (canFallbackToShared && deviceIdentity) {
           clearDeviceAuthToken({ deviceId: deviceIdentity.deviceId, role, scope: authScopeKey });
         }
@@ -588,11 +603,13 @@ export class GatewayBrowserClient {
       const evt = parsed as GatewayEventFrame;
       if (evt.event === "connect.challenge") {
         const payload = evt.payload as { nonce?: unknown } | undefined;
-        const nonce = payload && typeof payload.nonce === "string" ? payload.nonce : null;
-        if (nonce) {
-          this.connectNonce = nonce;
-          void this.sendConnect();
+        const nonce = payload && typeof payload.nonce === "string" ? payload.nonce.trim() : null;
+        if (!nonce) {
+          this.ws?.close(CONNECT_FAILED_CLOSE_CODE, "connect challenge missing nonce");
+          return;
         }
+        this.connectNonce = nonce;
+        void this.sendConnect();
         return;
       }
       const seq = typeof evt.seq === "number" ? evt.seq : null;
@@ -651,7 +668,8 @@ export class GatewayBrowserClient {
     this.connectSent = false;
     if (this.connectTimer !== null) window.clearTimeout(this.connectTimer);
     this.connectTimer = window.setTimeout(() => {
-      void this.sendConnect();
-    }, 750);
+      if (this.connectSent || this.ws?.readyState !== WebSocket.OPEN) return;
+      this.ws?.close(CONNECT_FAILED_CLOSE_CODE, "connect challenge timeout");
+    }, 2000);
   }
 }

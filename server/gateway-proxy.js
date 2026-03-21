@@ -95,7 +95,10 @@ function createGatewayProxy(options) {
 
   const wss = new WebSocketServer({ noServer: true, verifyClient });
 
-  wss.on("connection", (browserWs) => {
+  wss.on("connection", (browserWs, req) => {
+    try {
+      console.log("[claw3d proxy] browser websocket connected", req?.url ?? "");
+    } catch {}
     let upstreamWs = null;
     let upstreamReady = false;
     let upstreamUrl = "";
@@ -204,6 +207,9 @@ function createGatewayProxy(options) {
       });
 
       upstreamWs.on("message", (upRaw) => {
+        try {
+          console.log("[claw3d proxy] gateway->studio", String(upRaw ?? ""));
+        } catch {}
         const upParsed = safeJsonParse(String(upRaw ?? ""));
         if (upParsed && isObject(upParsed) && upParsed.type === "res") {
           const resId = typeof upParsed.id === "string" ? upParsed.id : "";
@@ -244,6 +250,9 @@ function createGatewayProxy(options) {
     void startUpstream();
 
     browserWs.on("message", async (raw) => {
+      try {
+        console.log("[claw3d proxy] browser->studio", String(raw ?? ""));
+      } catch {}
       const parsed = safeJsonParse(String(raw ?? ""));
       if (!parsed || !isObject(parsed)) {
         closeBoth(1003, "invalid json");

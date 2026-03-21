@@ -58,6 +58,9 @@ async function main() {
   await app.prepare();
   const handleUpgrade = app.getUpgradeHandler();
   const handleServerUpgrade = (req, socket, head) => {
+    try {
+      console.log("[claw3d server] upgrade", req.url ?? "");
+    } catch {}
     if (resolvePathname(req.url) === "/api/gateway/ws") {
       proxy.handleUpgrade(req, socket, head);
       return;

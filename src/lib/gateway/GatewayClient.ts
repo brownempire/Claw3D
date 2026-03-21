@@ -547,12 +547,14 @@ export const useGatewayConnection = (
         const settings = envelope.settings ?? null;
         const gateway = settings?.gateway ?? null;
         if (cancelled) return;
-        setLocalGatewayDefaults(normalizeLocalGatewayDefaults(envelope.localGatewayDefaults));
+        const normalizedLocalDefaults = normalizeLocalGatewayDefaults(envelope.localGatewayDefaults);
+        setLocalGatewayDefaults(normalizedLocalDefaults);
         const nextGatewayUrl = gateway?.url?.trim() ? gateway.url : DEFAULT_UPSTREAM_GATEWAY_URL;
-        const nextToken =
+        const nextTokenFromSettings =
           gateway && "token" in gateway && typeof gateway.token === "string"
-            ? gateway.token
+            ? gateway.token.trim()
             : "";
+        const nextToken = nextTokenFromSettings || normalizedLocalDefaults?.token || "";
         loadedGatewaySettings.current = {
           gatewayUrl: nextGatewayUrl.trim(),
           token: nextToken,
