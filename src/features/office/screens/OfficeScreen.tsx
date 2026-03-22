@@ -2929,10 +2929,14 @@ export function OfficeScreen({
           <button
             type="button"
             onClick={() => setOpenClawConsoleCollapsed(false)}
-            className="pointer-events-auto fixed bottom-3 left-3 z-30 inline-flex max-w-[calc(100vw-1.5rem)] items-center gap-3 rounded border border-cyan-500/25 bg-black/78 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-cyan-200/80 shadow-2xl backdrop-blur transition-colors hover:border-cyan-400/45 hover:text-cyan-50"
+            className="pointer-events-auto fixed bottom-3 left-3 z-30 inline-flex w-[132px] max-w-[calc(100vw-1.5rem)] items-start justify-between gap-2 rounded border border-cyan-500/25 bg-black/78 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-cyan-200/80 shadow-2xl backdrop-blur transition-colors hover:border-cyan-400/45 hover:text-cyan-50"
           >
-            <span>OpenClaw Event Console</span>
-            <span className="rounded border border-cyan-500/15 bg-cyan-950/20 px-1.5 py-0.5 text-[10px] text-cyan-100/55">
+            <span className="block text-left leading-tight">
+              OpenClaw
+              <br />
+              Event Console
+            </span>
+            <span className="mt-0.5 rounded border border-cyan-500/15 bg-cyan-950/20 px-1.5 py-0.5 text-[10px] text-cyan-100/55">
               {openClawLogEntries.length}
             </span>
           </button>
