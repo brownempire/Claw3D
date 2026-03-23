@@ -6,6 +6,8 @@ export type OfficeAgent = {
   status: "working" | "idle" | "error";
   color: string;
   item: string;
+  activityLabel?: string | null;
+  activityTone?: "working" | "thinking" | "update" | "error" | null;
   avatarProfile?: AgentAvatarProfile | null;
 };
 

@@ -369,24 +369,78 @@ const getDeterministicItem = (id: string) => {
   return ITEMS[Math.abs(hash) % ITEMS.length];
 };
 
-const mapAgentToOffice = (agent: AgentState): OfficeAgent => {
+const mapAgentToOffice = (
+  agent: AgentState,
+  options?: {
+    deskHeld?: boolean;
+    gymHeld?: boolean;
+    phoneBoothHeld?: boolean;
+    qaHeld?: boolean;
+    smsBoothHeld?: boolean;
+  },
+): OfficeAgent => {
+  const deskHeld = Boolean(options?.deskHeld);
+  const gymHeld = Boolean(options?.gymHeld);
+  const phoneBoothHeld = Boolean(options?.phoneBoothHeld);
+  const qaHeld = Boolean(options?.qaHeld);
+  const smsBoothHeld = Boolean(options?.smsBoothHeld);
+  const trimmedThinking = agent.thinkingTrace?.trim() ?? "";
+  const trimmedStream = agent.streamText?.trim() ?? "";
+  const hasUnseenActivity = agent.hasUnseenActivity;
+
+  let activityLabel: string | null = null;
+  let activityTone: OfficeAgent["activityTone"] = null;
+
   if (agent.status === "error") {
+    activityLabel = "NEEDS ATTENTION";
+    activityTone = "error";
     return {
       id: agent.agentId,
       name: agent.name || "Unknown",
       status: "error",
       color: stringToColor(agent.agentId),
       item: getDeterministicItem(agent.agentId),
+      activityLabel,
+      activityTone,
       avatarProfile: agent.avatarProfile ?? null,
     };
   }
+
   const isWorking = agent.status === "running" || Boolean(agent.runId);
+  if (phoneBoothHeld) {
+    activityLabel = "ON CALL";
+    activityTone = "working";
+  } else if (smsBoothHeld) {
+    activityLabel = "TEXTING";
+    activityTone = "working";
+  } else if (qaHeld) {
+    activityLabel = "QA REVIEW";
+    activityTone = "working";
+  } else if (gymHeld) {
+    activityLabel = "WORKOUT";
+    activityTone = "working";
+  } else if (trimmedThinking) {
+    activityLabel = "THINKING";
+    activityTone = "thinking";
+  } else if (trimmedStream) {
+    activityLabel = "RESPONDING";
+    activityTone = "working";
+  } else if (deskHeld || isWorking) {
+    activityLabel = "WORKING";
+    activityTone = "working";
+  } else if (hasUnseenActivity) {
+    activityLabel = "UPDATE READY";
+    activityTone = "update";
+  }
+
   return {
     id: agent.agentId,
     name: agent.name || "Unknown",
     status: isWorking ? "working" : "idle",
     color: stringToColor(agent.agentId),
     item: getDeterministicItem(agent.agentId),
+    activityLabel,
+    activityTone,
     avatarProfile: agent.avatarProfile ?? null,
   };
 };
@@ -2516,7 +2570,13 @@ export function OfficeScreen({
                       : `desk-hold-${agent.agentId}`),
               }
             : agent;
-      const officeAgent = mapAgentToOffice(effectiveAgent);
+      const officeAgent = mapAgentToOffice(effectiveAgent, {
+        deskHeld,
+        gymHeld,
+        phoneBoothHeld,
+        qaHeld,
+        smsBoothHeld,
+      });
       nextCache.set(agent.agentId, {
         agent,
         deskHeld,

@@ -4865,6 +4865,8 @@ export function RetroOffice3D({
                 name={agent.name}
                 status={agent.status}
                 color={agentColorMap.get(agent.id) ?? "#888"}
+                activityLabel={"activityLabel" in agent ? agent.activityLabel ?? null : null}
+                activityTone={"activityTone" in agent ? agent.activityTone ?? null : null}
                 appearance={"avatarProfile" in agent ? agent.avatarProfile ?? null : null}
                 agentsRef={renderAgentsRef}
                 agentLookupRef={renderAgentLookupRef}

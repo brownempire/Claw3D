@@ -31,6 +31,8 @@ export type AgentModelProps = {
   name: string;
   status: OfficeAgent["status"];
   color: string;
+  activityLabel?: string | null;
+  activityTone?: OfficeAgent["activityTone"];
   appearance?: AgentAvatarProfile | null;
   agentsRef: RefObject<RenderAgent[]>;
   agentLookupRef?: RefObject<Map<string, RenderAgent>>;

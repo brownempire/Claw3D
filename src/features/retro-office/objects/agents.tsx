@@ -16,6 +16,8 @@ export const AgentModel = memo(function AgentModel({
   name,
   status,
   color,
+  activityLabel = null,
+  activityTone = null,
   appearance,
   agentsRef,
   agentLookupRef,
@@ -519,6 +521,14 @@ export const AgentModel = memo(function AgentModel({
         ? "error"
         : "...";
   const activeSpeechBubble = showSpeech && Boolean(speechText?.trim());
+  const activityChipTone =
+    activityTone === "error"
+      ? { fill: "#3a1016", stroke: "#ef4444", text: "#fecaca" }
+      : activityTone === "thinking"
+        ? { fill: "#1a2030", stroke: "#58c6ff", text: "#d7efff" }
+        : activityTone === "update"
+          ? { fill: "#2d2412", stroke: "#f59e0b", text: "#fde68a" }
+          : { fill: "#1d2a17", stroke: "#22c55e", text: "#dcfce7" };
   const normalizedSpeechBubbleText = activeSpeechBubble
     ? resolvedSpeechText.replace(/\s+/g, " ").trim()
     : resolvedSpeechText;
@@ -992,6 +1002,40 @@ export const AgentModel = memo(function AgentModel({
             font={undefined}
           >
             {name}
+          </Text>
+        </Billboard>
+      ) : null}
+      {!activeSpeechBubble && activityLabel ? (
+        <Billboard position={[0, 1.31, 0]}>
+          <mesh position={[0, 0, -0.001]}>
+            <planeGeometry args={[1.26, 0.2]} />
+            <meshBasicMaterial
+              color={activityChipTone.fill}
+              transparent
+              opacity={0.92}
+              depthTest={false}
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh position={[0, 0, -0.0015]}>
+            <planeGeometry args={[1.29, 0.23]} />
+            <meshBasicMaterial
+              color={activityChipTone.stroke}
+              transparent
+              opacity={0.45}
+              depthTest={false}
+              depthWrite={false}
+            />
+          </mesh>
+          <Text
+            position={[0, 0, 0.001]}
+            fontSize={0.105}
+            color={activityChipTone.text}
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={1.08}
+          >
+            {activityLabel}
           </Text>
         </Billboard>
       ) : null}
